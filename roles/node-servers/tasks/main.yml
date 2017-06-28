@@ -1,0 +1,25 @@
+---
+  - name: Creating unprivileged user
+    user:
+      name: "{{ user }}"
+      state: present
+      password: "{{ user_pass }}"
+
+  - name: Updating packages
+    shell: apt-get update
+
+  - name: Installing Required packages
+    apt: name={{ item }} state=latest
+    with_items:
+      - build-essential
+      - apt-transport-https
+      - python-openssl
+      - git
+      - ufw
+
+  - include: nodejs.yml
+  - include: haproxy.yml
+  - include: letsencrypt-dns.yml
+  - include: deploy.yml
+  - include: daemonize-nodeapp.yml
+  - include: iptables.yml

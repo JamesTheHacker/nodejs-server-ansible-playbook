@@ -1,0 +1,12 @@
+---
+
+- name: Adding apt key for nodesource
+  apt_key: url=https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+  
+- name: Adding repo for nodesource
+  apt_repository:
+    repo: 'deb https://deb.nodesource.com/node_8.x stretch main' 
+    update_cache: yes
+
+- name: Installing NodeJS
+  apt: name=nodejs state=latest

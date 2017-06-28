@@ -1,0 +1,19 @@
+[Unit]
+Description=Daemonized NodeJS App
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/node /var/www/{{ entry_point }}
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=nodeapp
+User={{ user }}
+Group={{ user }}
+Environment=PATH=/usr/bin:/usr/local/bin
+Environment=NODE_ENV=production
+WorkingDirectory=/var/www/
+
+[Install]
+WantedBy=multi-user.target

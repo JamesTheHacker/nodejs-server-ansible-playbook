@@ -1,0 +1,10 @@
+---
+
+- name: Cloning app repo
+  git:
+    repo: "{{ app_repo }}"
+    dest: /var/www
+
+- name: Running npm install
+  npm:
+    path: /var/www

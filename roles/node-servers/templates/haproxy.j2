@@ -1,0 +1,39 @@
+global
+  log /dev/log local0
+  log /dev/log local1 notice
+  chroot /var/lib/haproxy
+  stats socket /run/haproxy/admin.socket mode 660 level admin
+  stats timeout 30s
+  user haproxy
+  group haproxy
+  daemon
+  maxconn 2048
+  tune.ssl.default-dh-param 2048
+
+defaults
+  log global
+  mode http
+  option httplog
+  option dontlognull
+  option forwardfor
+  option http-server-close
+
+frontend www-http
+  bind {{ hostvars.localhost.server.droplet.ip_address }}:80
+  reqadd X-Forwarded-Proto:\ http
+  default_backend www-backend
+
+frontend www-https
+  bind {{ hostvars.localhost.server.droplet.ip_address }}:443 ssl crt /etc/haproxy/certs/{{ domain }}.pem
+  reqadd X-Forwarded-Proto:\ https
+  default_backend www-backend
+
+backend www-backend
+  redirect scheme https if !{ ssl_fc }
+  mode http
+  balance roundrobin
+  stick-table type ip size 200k expire 100m
+  stick on src
+  server www-1 127.0.0.1:5001 check
+  server www-2 127.0.0.1:5002 check
+  server www-3 127.0.0.1:5003 check

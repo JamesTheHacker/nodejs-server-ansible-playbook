@@ -1,0 +1,24 @@
+---
+- name: Install haproxy
+  apt: name=haproxy state=latest
+
+- name: Creating /var/www directory
+  file: 
+    path: /var/www
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ user }}"
+
+- name: Creating /etc/haproxy/certs directory
+  file: 
+    path: /etc/haproxy/certs
+    state: directory
+
+- name: Copying haproxy .cfg file
+  template:
+    src: templates/haproxy.j2
+    dest: /etc/haproxy/haproxy.cfg
+    owner: root
+    group: root
+  notify:
+    - restart-haproxy

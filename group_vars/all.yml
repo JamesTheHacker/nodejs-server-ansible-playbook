@@ -1,0 +1,24 @@
+---
+
+# Domain name for your application
+domain: 
+
+# Git repository for your NodeJS application
+app_repo: https://github.com/JamesTheHacker/nodebox-testapp
+
+# Application entry point
+entry_point: server.js
+
+# Digital Ocean API key
+api_token: 
+
+# An SSH key added to Digital Ocean
+ssh_key_id:
+
+# Unprivileged user
+user: web
+user_pass: ProBa92BBL23eeN034444Se12340cUR203e4124daade
+
+# The following variables are required for Let's Encrypt
+email: your@email.com
+country: GB

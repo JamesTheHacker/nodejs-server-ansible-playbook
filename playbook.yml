@@ -1,0 +1,56 @@
+---
+- hosts: localhost
+  tasks:
+  - name: Spinning up a new droplet
+    digital_ocean:
+      state: present
+      command: droplet
+      name: "{{ domain }}"
+      ssh_key_ids:
+        - "{{ ssh_key_id }}"
+      size_id: 512mb
+      region_id: lon1
+      image_id: debian-9-x64
+      api_token: "{{ api_token }}"
+      backups_enabled: no
+    register: server
+  
+  - name: Adding domain name {{ domain }}
+    digital_ocean_domain:
+      api_token: "{{ api_token }}"
+      state: present
+      name: "{{ domain }}"
+      ip: "{{ server.droplet.ip_address }}"
+  
+  - name: Adding www A record
+    uri:
+      url: https://api.digitalocean.com/v2/domains/{{ domain }}/records
+      method: POST
+      status_code: 201
+      headers:
+        Content-Type: application/json
+        Authorization: Bearer {{ api_token }}
+      body: 
+        type: A
+        name: www
+        data: "{{ server.droplet.ip_address }}"
+        priority: null
+        port: null
+        ttl: 1800
+        weight: null
+      body_format: json
+
+  - name: Adding droplet to hosts
+    add_host: hostname={{ server.droplet.ip_address }} group=node-servers
+  
+  - name: Wait for SSH to come up
+    local_action: wait_for host={{ server.droplet.ip_address }} port=22 delay=20 timeout=320 state=started
+
+- hosts: node-servers
+  remote_user: root
+
+  vars:
+    - www_domain: "www.{{ domain }}"
+
+  roles:
+    - node-servers

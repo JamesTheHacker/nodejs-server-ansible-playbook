@@ -1,0 +1,99 @@
+---
+
+# Required to store public key
+- name: Creating /etc/ssl/public directory
+  file:
+    path: /etc/ssl/public
+    state: directory
+
+# Required to store csr
+- name: Creating /etc/ssl/csr directory
+  file:
+    path: /etc/ssl/csr
+    state: directory
+
+# Generate an account key for letsencrypt cert.
+- name: Generating Let's Encrypt account key
+  openssl_privatekey:
+    path: "/etc/ssl/private/le_account.key"
+
+# Generate a domain key for letsencrypt cert.
+- name: Generating domain key
+  openssl_privatekey:
+    path: "/etc/ssl/private/{{ domain }}.key"
+
+- name: Generating Certificate Signing Request
+  openssl_csr:
+    path: "/etc/ssl/csr/{{ domain }}.csr"
+    privatekey_path: "/etc/ssl/private/{{ domain }}.key"
+    countryName: "{{ country }}"
+    organizationName: "{{ domain }}"
+    emailAddress: "{{ email }}"
+    subjectAltName: "DNS:{{ www_domain }},DNS:{{ domain }}"
+
+- name: Preparing Let's Encrypt SSL Certificate
+  letsencrypt:
+    account_email: "{{ email }}"
+    account_key: "/etc/ssl/private/le_account.key"
+    acme_directory: https://acme-v01.api.letsencrypt.org/directory
+    agreement: "https://letsencrypt.org/documents/LE-SA-v1.1.1-August-1-2016.pdf"
+    challenge: dns-01
+    csr: "/etc/ssl/csr/{{ domain }}.csr"
+    dest: "/etc/ssl/private/{{ domain }}.crt"
+  register: acme_data
+
+# Create a domain.com TXT record on Digital Ocean to validate domain for Let's Encrypt
+- name: Creating domain TXT record
+  uri:
+    url: https://api.digitalocean.com/v2/domains/{{ domain }}/records
+    method: POST
+    status_code: 201
+    headers:
+      Content-Type: application/json
+      Authorization: Bearer {{ api_token }}
+    body: 
+      type: TXT
+      name: "{{ acme_data['challenge_data'][domain]['dns-01']['resource'] }}"
+      data: "{{ acme_data['challenge_data'][domain]['dns-01']['resource_value'] }}"
+      priority: null
+      port: null
+      ttl: 1800
+      weight: null
+    body_format: json
+  when: acme_data | changed
+
+- name: Creating www domain TXT record
+  uri:
+    url: https://api.digitalocean.com/v2/domains/{{ domain }}/records
+    method: POST
+    status_code: 201
+    headers:
+      Content-Type: application/json
+      Authorization: Bearer {{ api_token }}
+    body: 
+      type: TXT
+      name: "{{ acme_data['challenge_data'][www_domain]['dns-01']['resource'] }}.www"
+      data: "{{ acme_data['challenge_data'][www_domain]['dns-01']['resource_value'] }}"
+      priority: null
+      port: null
+      ttl: 1800
+      weight: null
+    body_format: json
+
+# Wait for DNS to propegate
+- pause:
+    minutes: 1
+
+- name: Generating Let's Encrypt SSL Certificate
+  letsencrypt:
+    account_key: "/etc/ssl/private/le_account.key"
+    acme_directory: https://acme-v01.api.letsencrypt.org/directory
+    challenge: dns-01
+    csr: "/etc/ssl/csr/{{ domain }}.csr"
+    dest: "/etc/ssl/private/{{ domain }}.crt"
+    data: "{{ acme_data }}"
+
+# I don't like this here. Move it out!
+- name: Creating PEM file
+  shell: cat "/etc/ssl/private/{{ domain }}.crt" "/etc/ssl/private/{{ domain }}.key" | tee "/etc/haproxy/certs/{{ domain }}.pem"
+
