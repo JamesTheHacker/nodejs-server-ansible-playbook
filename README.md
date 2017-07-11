@@ -2,9 +2,9 @@
 
 ![Network Architecutre](https://cdn-images-1.medium.com/max/800/1*TvGvibYBKv3bfMHAUrhJKg.png)
 
-**Deploy a NodeJS application to Digital Ocean with ease!** Don't have a Digital Ocean account? [Get one here and get $10 free](https://m.do.co/c/dde4646baa31) (enough to pay for 2 servers for 2 months).
+**Deploy a NodeJS application to Digital Ocean with ease!** Don't have a Digital Ocean account? [Get one here and get $10 free](https://m.do.co/c/dde4646baa31) (enough to pay for 2 servers for a month).
 
-This play will set up a single that is well suited to small/medium NodeJS applications on Digital Ocean. I use this same playbook for setting A/B testing for my marketing campaigns and have used it on servers that recieve large traffic loads without any issues.
+This play will set up a single server that is well suited to small/medium NodeJS applications on Digital Ocean. I use this same playbook for setting A/B testing for my marketing campaigns and have used it on servers that recieve large traffic loads without any issues.
 
 The playbook is an extension to a [tutorial I write](https://codeburst.io/building-a-nodejs-web-server-with-haproxy-and-lets-encrypt-on-debian-stretch-2fbf16cfba3a) on setting up a small production ready secure NodeJS server. It performs exactly the same tasks detailed in my tutorial, except it automates the entire process using Ansible.
 
